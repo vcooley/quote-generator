@@ -1,11 +1,10 @@
-port module Quote exposing (..)
 
 import Html exposing (..)
 import Html.App as App
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (..)
 import Http exposing (..)
-import Json.Decode as Json
+import Json.Decode
 import Json.Decode exposing ((:=))
 import Task
 
@@ -59,11 +58,25 @@ update msg model =
 
 view: Model -> Html Msg
 view model =
-    div []
-      [ p [ class "quote" ] [ text model.quote ]
-      , p [ class "author" ] [ text ( "-" ++ model.author ) ]
-      , button [ onClick GetQuote ] [ text "New Quote" ]
-      ]
+    let
+        tweetButton =
+            a [ class "twitter-share-button"
+              , href "https:twitter.com/share"
+              , attribute "data-text" ( makeTweet model )
+              , attribute "data-show-count"  "false"
+              ] [ text "Tweet" ]
+    in
+        div []
+          [ p [ class "quote" ] [ text model.quote ]
+          , p [ class "author" ] [ text ( "--" ++ model.author ) ]
+          , tweetButton
+          , br [] []
+          , button [ onClick GetQuote ] [ text "New Quote" ]
+          ]
+
+makeTweet: Model -> String
+makeTweet model =
+    model.quote ++ " --" ++ model.author
 
 
 -- SUBSCRIPTIONS
@@ -98,9 +111,9 @@ getRandomQuote category =
         Task.perform FetchFail FetchSucceed
             ( fromJson decodeNewQuote (send defaultSettings req) )
 
-decodeNewQuote: Json.Decoder Model
+decodeNewQuote: Json.Decode.Decoder Model
 decodeNewQuote =
-    Json.object3 Model
-        ("quote" := Json.string)
-        ("author" := Json.string)
-        ("category" := Json.string)
+    Json.Decode.object3 Model
+        ("quote" := Json.Decode.string)
+        ("author" := Json.Decode.string)
+        ("category" := Json.Decode.string)
